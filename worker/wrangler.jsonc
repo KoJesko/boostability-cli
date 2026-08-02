@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "boost-cli",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "fbd1f9c07d8932cec33afc5c2a8bc746",
+
+  // Scoped deliberately narrow. kojesko.dev serves a live portfolio SPA from
+  // its root; these two patterns claim only the /boost namespace and leave
+  // every other path on the zone untouched. Removing the Worker restores the
+  // previous behaviour exactly.
+  "routes": [
+    { "pattern": "kojesko.dev/boost", "zone_name": "kojesko.dev" },
+    { "pattern": "kojesko.dev/boost/*", "zone_name": "kojesko.dev" }
+  ],
+
+  // Ship the shell CLI and installer as real files that get inlined into the
+  // bundle as strings, rather than as heredocs inside the TypeScript.
+  "rules": [{ "type": "Text", "globs": ["**/*.sh"], "fallthrough": false }],
+
+  // The Worker holds the Anthropic key, so every caller spends the owner's
+  // tokens. Rate limiting is not optional here.
+  "ratelimits": [
+    {
+      "name": "PLAN_LIMIT",
+      "namespace_id": "1001",
+      "simple": { "limit": 8, "period": 60 }
+    }
+  ],
+
+  "observability": { "enabled": true, "head_sampling_rate": 1 }
+}

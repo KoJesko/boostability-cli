@@ -1,0 +1,9 @@
+# Copy to `.dev.vars` and fill in a real key for local development.
+#   cp worker/.dev.vars.example worker/.dev.vars
+#
+# `.dev.vars` is gitignored. The deployed Worker does NOT read this file --
+# set the secret there with:  npx wrangler secret put ANTHROPIC_API_KEY
+#
+# Create a key at https://console.anthropic.com/settings/keys
+# (A Claude Code / claude.ai login is a different credential and will not work.)
+ANTHROPIC_API_KEY="sk-ant-..."
