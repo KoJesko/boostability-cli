@@ -14,8 +14,8 @@
     "wrangler": "^4.118.0"
   },
   "allowScripts": {
-    "workerd@1.20260730.1": true,
-    "esbuild@0.28.1": true
+    "workerd@1.20261116.1": true,
+    "esbuild@0.28.2": true
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0"

@@ -365,7 +365,9 @@ load_details_file() {
 
 open_editor() {
     _ed="${EDITOR:-${VISUAL:-nano}}"
-    _tmp="${TMPDIR:-/tmp}/boost-details.$$.md"
+    # mktemp, not a $$-derived name: a predictable path in a shared /tmp can be
+    # pre-created as a symlink by another user to clobber or read our files.
+    _tmp=$(mktemp "${TMPDIR:-/tmp}/boost-details.XXXXXX") || die "could not create a temp file"
     printf '%s' "$DETAILS_TEMPLATE" > "$_tmp"
     if ! $_ed "$_tmp"; then rm -f "$_tmp"; die "could not run editor '$_ed'"; fi
     load_details_file "$_tmp"
@@ -454,15 +456,17 @@ collect_activity() {
 # $1 = activity id, stdin = plan TSV.
 apply_plan() {
     _id=$1
-    _plan="${TMPDIR:-/tmp}/boost-plan.$$"
+    _plan=$(mktemp "${TMPDIR:-/tmp}/boost-plan.XXXXXX") || die "could not create a temp file"
     cat > "$_plan"
 
     _summary=$(awk -F"$TAB" '$1=="S" { print $2; exit }' "$_plan")
 
     {
         # Every other activity passes through untouched.
-        awk -F"$TAB" -v OFS="$TAB" -v a="$_id" -v s="$_summary" '
-            $1=="A" && $2==a { $7 = s; print; next }
+        # Summary via ENVIRON, not -v: -v expands backslash escapes, so server
+        # text like `\033[...` or `\t` would become raw control bytes / tabs.
+        BOOST_SUMMARY=$_summary awk -F"$TAB" -v OFS="$TAB" -v a="$_id" '
+            $1=="A" && $2==a { $7 = ENVIRON["BOOST_SUMMARY"]; print; next }
             $1=="T" && $2==a { next }
             { print }
         ' "$STORE"
