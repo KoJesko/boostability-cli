@@ -57,9 +57,13 @@ function wantsTsv(request: Request): boolean {
  * Tabs and newlines are the record separators, so they can never appear inside
  * a field. Collapsing them is lossy by design -- the alternative is an escaping
  * scheme that every awk consumer would then have to reverse.
+ *
+ * Every other C0/C1 control character is collapsed too: the shell CLI prints
+ * these fields straight to the terminal, and model output can be steered by an
+ * attached PDF, so an ESC here would be a terminal escape-sequence injection.
  */
 function tsvField(value: string): string {
-  return value.replace(/[\t\r\n]+/g, " ").trim();
+  return value.replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ").trim();
 }
 
 function tsv(rows: string[][], status = 200): Response {
